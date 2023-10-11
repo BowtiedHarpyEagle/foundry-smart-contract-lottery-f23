@@ -34,18 +34,25 @@ pragma solidity ^0.8.18;
 contract Raffle {
     error Raffle__NotEnoughETHSent();
     uint256 private immutable i_entranceFee;
+    // @dev duration of the raffle in seconds
+    uint256 private immutable i_interval;
     address payable [] private s_players;
+    uint256 private s_lastTimestamp;
 
     /** Events */
 
     event EnteredRaffle(address indexed player);
 
-    constructor(uint256 entranceFee) {
+    constructor(uint256 entranceFee, uint256 interval) {
         i_entranceFee = entranceFee;
+        i_interval = interval;
+        s_lastTimestamp = block.timestamp;
     }
 
     function enterRaffle()  external payable {
-        // require(msg.value >= i_entranceFee, "Not enough ETH sent!"); Don't use, custom error is more gas efficient
+        /**  require(msg.value >= i_entranceFee, "Not enough ETH sent!"); 
+        *Don't use require, custom error is more gas efficient 
+        */
         if (msg.value < i_entranceFee) {
             revert Raffle__NotEnoughETHSent();
         }
@@ -56,8 +63,16 @@ contract Raffle {
          */
         emit EnteredRaffle(msg.sender);
     }
-
-    function pickWinner() public {}
+    /*  1. Get a random number
+        2. Use that number to pick a winner
+        3. Get called automatically */
+    
+    function pickWinner() external {
+        //check if enough time has passed
+        if (block.timestamp - s_lastTimestamp < i_interval) {
+            revert ();
+        } 
+    }
 
     /** Getter Function */
     function getEntranceFee() public view returns (uint256) {
